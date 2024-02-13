@@ -4,25 +4,38 @@ import java.io.IOException;
 import java.net.Socket;
 
 
-public class Cliente {
-    public static void main(String[] args) throws IOException {
+public class Cliente implements Runnable{
+    private int puerto;
+    private String mensaje;
+
+    public Cliente(int puerto,String mensaje){
+        this.puerto=puerto;
+        this.mensaje=mensaje;
+
+    }
+
+
+    @Override
+    public void run() {
         String host="127.0.0.1";
-        int puerto=5002;
+
         DataOutputStream out;
-        DataInputStream in;
+
+        Socket sc= null;
+        try {
+            sc = new Socket(host,puerto);
 
 
-
-
-        Socket sc=new Socket(host,puerto);
-        in= new DataInputStream(sc.getInputStream());
         out=new DataOutputStream(sc.getOutputStream());
 
 
-        out.writeUTF("Hola soy el cliente.");
-        String mensaje=in.readUTF();
-        System.out.println(mensaje);
+        out.writeUTF(mensaje);
+
         sc.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }
 
