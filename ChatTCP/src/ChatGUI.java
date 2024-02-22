@@ -1,76 +1,75 @@
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatGUI extends Application {
+public class ChatGUI extends JFrame {
     private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_PORT = 12345;
 
-    private TextArea chatArea; // Área de texto para mostrar los mensajes del chat
-    private TextField inputField; // Campo de texto para escribir mensajes
+    private JTextArea chatArea;
+    private JTextField inputField;
 
-    private Socket socket; // Socket para la conexión con el servidor
-    private PrintWriter out; // Escritor para enviar mensajes al servidor
+    private Socket socket;
+    private PrintWriter out;
 
-    private List<PrintWriter> clientWriters = new ArrayList<>(); // Lista de escritores de clientes
+    private List<PrintWriter> clientWriters = new ArrayList<>();
 
-    @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("Chat");
+    public ChatGUI() {
+        setTitle("Chat");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        BorderPane root = new BorderPane();
+        JPanel panel = new JPanel(new BorderLayout());
 
-        chatArea = new TextArea();
+        chatArea = new JTextArea();
         chatArea.setEditable(false);
-        root.setCenter(chatArea);
+        JScrollPane scrollPane = new JScrollPane(chatArea);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        VBox inputBox = new VBox(10);
-        inputBox.setPadding(new Insets(10));
+        JPanel inputPanel = new JPanel(new BorderLayout());
+        inputField = new JTextField();
+        inputField.setToolTipText("Type your message here");
+        inputField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage();
+            }
+        });
+        inputPanel.add(inputField, BorderLayout.CENTER);
 
-        inputField = new TextField();
-        inputField.setPromptText("Type your message here");
-        inputField.setOnAction(e -> sendMessage()); // Acción para enviar mensajes cuando se presiona Enter
+        JButton sendButton = new JButton("Send");
+        sendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage();
+            }
+        });
+        inputPanel.add(sendButton, BorderLayout.EAST);
 
-        Button sendButton = new Button("Send");
-        sendButton.setOnAction(e -> sendMessage()); // Acción para enviar mensajes cuando se hace clic en el botón
+        panel.add(inputPanel, BorderLayout.SOUTH);
 
-        inputBox.getChildren().addAll(inputField, sendButton);
-        root.setBottom(inputBox);
+        add(panel);
 
-        Scene scene = new Scene(root, 400, 300);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-
-        // Conexión al servidor
         try {
-            socket = new Socket(SERVER_ADDRESS, SERVER_PORT); // Se establece la conexión con el servidor
-            out = new PrintWriter(socket.getOutputStream(), true); // Se crea un escritor para enviar mensajes al servidor
-            clientWriters.add(out); // Se agrega el escritor a la lista de escritores de clientes
+            socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            clientWriters.add(out);
 
-            new Thread(new ServerListener()).start(); // Se inicia un hilo para escuchar los mensajes del servidor
+            new Thread(new ServerListener()).start();
         } catch (IOException e) {
-            e.printStackTrace(); // Se imprime la traza de la excepción en caso de error
+            e.printStackTrace();
         }
     }
 
     private void sendMessage() {
-        String message = inputField.getText(); // Se obtiene el mensaje del campo de texto
+        String message = inputField.getText();
         if (!message.isEmpty()) {
-            out.println(message); // Se envía el mensaje al servidor
-            inputField.clear(); // Se limpia el campo de texto después de enviar el mensaje
+            out.println(message);
+            inputField.setText("");
         }
     }
 
@@ -78,30 +77,30 @@ public class ChatGUI extends Application {
         @Override
         public void run() {
             try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())); // Se crea un lector para recibir mensajes del servidor
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                String mensaje;
-                while ((mensaje = in.readLine()) != null) { // Bucle para recibir y mostrar mensajes del servidor
-                    String finalMensaje = mensaje;
-                    Platform.runLater(() -> {
-                        chatArea.appendText(finalMensaje + "\n"); // Se muestra el mensaje en el área de chat
+                String message;
+                while ((message = in.readLine()) != null) {
+                    String finalMessage = message;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            chatArea.append(finalMessage + "\n");
+                        }
                     });
                 }
             } catch (IOException e) {
-                e.printStackTrace(); // Se imprime la traza de la excepción en caso de error
+                e.printStackTrace();
             }
         }
     }
 
-    @Override
-    public void stop() throws Exception {
-        super.stop();
-        if (socket != null) {
-            socket.close(); // Se cierra el socket al detener la aplicación
-        }
-    }
-
     public static void main(String[] args) {
-        launch(args); // Se inicia la aplicación JavaFX
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new ChatGUI().setVisible(true);
+            }
+        });
     }
 }
