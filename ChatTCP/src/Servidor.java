@@ -44,7 +44,7 @@ public class Servidor {
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket=new ServerSocket(1234);
-        Server server = new Server(serverSocket);
+        Servidor server = new Servidor(serverSocket);
         server.startServer();
 
     }
