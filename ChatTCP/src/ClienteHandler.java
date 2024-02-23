@@ -3,56 +3,54 @@ import java.net.*;
 import java.util.ArrayList;
 
 public class ClienteHandler implements Runnable {
-    private static ArrayList<ClienteHandler> clienteHandler = new ArrayList<>();
+    private static ArrayList<ClienteHandler> clienteHandlers = new ArrayList<>();
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-    private String NombreCliente;
+    private String nombreCliente;
 
     public ClienteHandler(Socket socket) {
         try {
             this.socket = socket;
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.NombreCliente = bufferedReader.readLine();
-            clienteHandler.add(this);
-            DifundirMensaje("server: " + NombreCliente + " ha entrado al chat!");
+            this.nombreCliente = bufferedReader.readLine();
+            clienteHandlers.add(this);
+            difundirMensaje("server: " + nombreCliente + " ha entrado al chat!");
         } catch (IOException e) {
-            CerrarTodo();
+            cerrarTodo();
         }
     }
 
     @Override
     public void run() {
-        String MensajeCliente;
         try {
-            while ((MensajeCliente = bufferedReader.readLine()) != null) {
-                DifundirMensaje(NombreCliente + ": " + MensajeCliente);
+            String mensajeCliente;
+            while ((mensajeCliente = bufferedReader.readLine()) != null) {
+                difundirMensaje(nombreCliente + ": " + mensajeCliente);
             }
         } catch (IOException e) {
-            CerrarTodo();
+            // Cliente desconectado
+        } finally {
+            clienteHandlers.remove(this);
+            difundirMensaje("Server: " + nombreCliente + " se ha desconectado.");
+            cerrarTodo();
         }
     }
 
-    public static void DifundirMensaje(String MensajeEnviar) {
-        for (ClienteHandler cliente : clienteHandler) {
+    public static void difundirMensaje(String mensaje) {
+        for (ClienteHandler cliente : clienteHandlers) {
             try {
-                cliente.bufferedWriter.write(MensajeEnviar);
+                cliente.bufferedWriter.write(mensaje);
                 cliente.bufferedWriter.newLine();
                 cliente.bufferedWriter.flush();
             } catch (IOException e) {
-                cliente.CerrarTodo();
+                cliente.cerrarTodo();
             }
         }
     }
 
-    public void salidaCliente() {
-        clienteHandler.remove(this);
-        DifundirMensaje("Server " + NombreCliente + " ha salido del chat.");
-    }
-
-    public void CerrarTodo() {
-        salidaCliente();
+    public void cerrarTodo() {
         try {
             if (bufferedReader != null) {
                 bufferedReader.close();
