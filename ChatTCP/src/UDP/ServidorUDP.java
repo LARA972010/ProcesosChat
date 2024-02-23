@@ -31,9 +31,11 @@ public class ServidorUDP {
 
     public void difundirMensaje(String mensaje, int puertoCliente) {
         try {
+            //No creo que esta sea la forma mas óptima
             for (int puerto = 1025; puerto <= 65535; puerto++) {
                 if (puerto != puertoCliente) {
-                    DatagramPacket packet = new DatagramPacket(mensaje.getBytes(), mensaje.getBytes().length, InetAddress.getByName("localhost"), puerto);
+                    DatagramPacket packet = new DatagramPacket(mensaje.getBytes(), mensaje.getBytes().length,
+                            InetAddress.getByName("localhost"), puerto);
                     socket.send(packet);
                 }
             }

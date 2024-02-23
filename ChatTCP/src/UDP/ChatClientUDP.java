@@ -78,9 +78,9 @@ public class ChatClientUDP extends JFrame {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 String mensaje = new String(packet.getData(), 0, packet.getLength());
-                for (int i=0;i<1;i++) {
-                    chatArea.append(mensaje + "\n");
-                }
+               //En este punto me escribe el mensaje dos veces
+                chatArea.append(mensaje + "\n");
+
             }
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error al recibir mensajes: " + e.getMessage());
