@@ -60,7 +60,7 @@ public class ChatClient extends JFrame {
         try {
             String mensajeEnviar = inputField.getText().trim();
             if (!mensajeEnviar.isEmpty()) {
-                bufferedWriter.write(NombreUsuario + ": " + mensajeEnviar);
+                bufferedWriter.write(   mensajeEnviar);
                 bufferedWriter.newLine();
                 bufferedWriter.flush();
                 inputField.setText("");
